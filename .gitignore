@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+
+# MLX artifacts
+.mlx-checkpoints/
+converted/
+*.safetensors
+*.npz
+
+# Nanochat upstream
+nanochat/
+.nanochat-cache/
+
+# macOS
+.DS_Store
+
+# IDE / tooling
+.claude/
+.gstack/
+.vscode/
+.idea/
+
+# Hostfiles (generated per-cluster)
+build/

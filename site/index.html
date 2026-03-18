@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLX GPT — Training GPT-2 on Mac Minis</title>
+<meta name="description" content="An open experiment training GPT-2 scale language models on a 2-node Mac Mini cluster using Apple's MLX framework and Thunderbolt RDMA.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-deep: #0a0c10;
+  --bg-card: #12151c;
+  --bg-card-hover: #181c26;
+  --bg-surface: #1a1e28;
+  --border: #252a36;
+  --border-subtle: #1e2230;
+  --text-primary: #e8e6e1;
+  --text-secondary: #8a8b8e;
+  --text-dim: #55575c;
+  --amber: #e5a33d;
+  --amber-dim: #b8832f;
+  --amber-glow: rgba(229, 163, 61, 0.08);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.15);
+  --red: #f87171;
+  --blue: #60a5fa;
+  --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  --sans: 'DM Sans', -apple-system, sans-serif;
+  --display: 'Space Grotesk', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Scanline effect - very subtle */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.015) 2px,
+    rgba(0, 0, 0, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---- NAV ---- */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 16px 24px;
+  background: rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+nav .nav-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+nav .logo {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--amber);
+  letter-spacing: 0.05em;
+  text-decoration: none;
+}
+
+nav .logo span { color: var(--text-dim); }
+
+nav .nav-links {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+}
+
+nav .nav-links a {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+nav .nav-links a:hover { color: var(--amber); }
+
+/* Status pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  background: var(--green-dim);
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+
+.status-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ---- HERO ---- */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 80px;
+  position: relative;
+}
+
+.hero-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(229, 163, 61, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(229, 163, 61, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, black 20%, transparent 70%);
+}
+
+.hero-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--amber-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fade-up 0.6s ease forwards 0.2s;
+}
+
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(48px, 8vw, 88px);
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fade-up 0.6s ease forwards 0.35s;
+}
+
+.hero h1 .accent {
+  color: var(--amber);
+  position: relative;
+}
+
+.hero-sub {
+  font-family: var(--sans);
+  font-size: 19px;
+  color: var(--text-secondary);
+  max-width: 560px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fade-up 0.6s ease forwards 0.5s;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fade-up 0.6s ease forwards 0.65s;
+}
+
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-meta-item .label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-meta-item .value {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- SECTION BASE ---- */
+section {
+  padding: 100px 0;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 48px;
+  color: var(--text-primary);
+}
+
+/* ---- METRICS STRIP ---- */
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 100px;
+}
+
+.metric-card {
+  background: var(--bg-card);
+  padding: 28px 24px;
+  transition: background 0.2s;
+}
+
+.metric-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.metric-card .metric-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.metric-card .metric-value {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.metric-card .metric-value .unit {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-dim);
+  margin-left: 2px;
+}
+
+.metric-card .metric-delta {
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-top: 8px;
+  color: var(--green);
+}
+
+.metric-card .metric-delta.negative { color: var(--red); }
+
+/* ---- LOSS CHART ---- */
+.chart-section {
+  margin-bottom: 100px;
+}
+
+.chart-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px;
+  position: relative;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.chart-header h3 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.chart-legend-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 280px;
+}
+
+/* ---- ARCHITECTURE ---- */
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 100px 1fr;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+.node-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px;
+  position: relative;
+}
+
+.node-card .node-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.node-card .node-name::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.node-spec {
+  list-style: none;
+}
+
+.node-spec li {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+}
+
+.node-spec li:last-child { border-bottom: none; }
+
+.node-spec .spec-key { color: var(--text-dim); }
+.node-spec .spec-val { color: var(--text-primary); }
+
+.connection-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.connection-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber-dim), var(--amber), var(--amber-dim));
+  position: relative;
+  border-radius: 1px;
+}
+
+.connection-line::before,
+.connection-line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--amber);
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.connection-line::before { left: -3px; }
+.connection-line::after { right: -3px; }
+
+.connection-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--amber-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.arch-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mode-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.mode-card h4 {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.mode-card .mode-full {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+
+.mode-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ---- TIMELINE ---- */
+.timeline {
+  position: relative;
+  padding-left: 32px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--amber-dim), var(--border), var(--border));
+}
+
+.timeline-entry {
+  position: relative;
+  padding-bottom: 40px;
+}
+
+.timeline-entry:last-child { padding-bottom: 0; }
+
+.timeline-entry::before {
+  content: '';
+  position: absolute;
+  left: -29px;
+  top: 8px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg-deep);
+}
+
+.timeline-entry.milestone::before {
+  border-color: var(--amber);
+  background: var(--amber);
+  box-shadow: 0 0 12px rgba(229, 163, 61, 0.3);
+}
+
+.timeline-entry.active::before {
+  border-color: var(--green);
+  background: var(--green);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.3);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.timeline-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.timeline-title {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.timeline-body {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.timeline-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+  background: var(--amber-glow);
+  color: var(--amber);
+  border: 1px solid rgba(229, 163, 61, 0.15);
+}
+
+.timeline-metric {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--amber);
+  font-weight: 500;
+}
+
+/* ---- SAMPLE OUTPUT ---- */
+.sample-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  margin-top: 64px;
+}
+
+.sample-block .sample-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sample-block h4 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sample-block .model-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber-dim);
+  background: var(--amber-glow);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.sample-prompt {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.sample-prompt span { color: var(--text-secondary); }
+
+.sample-output {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.7;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border-left: 2px solid var(--amber-dim);
+}
+
+/* ---- NEXT SECTION ---- */
+.next-items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.next-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.next-card:hover {
+  border-color: var(--amber-dim);
+  background: var(--bg-card-hover);
+}
+
+.next-card .next-status {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.next-card .next-status.planned { color: var(--blue); }
+.next-card .next-status.exploring { color: var(--amber); }
+
+.next-card h4 {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.next-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ---- FOOTER ---- */
+footer {
+  border-top: 1px solid var(--border-subtle);
+  padding: 48px 0;
+  margin-top: 40px;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-text {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.footer-text a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-text a:hover { color: var(--amber); }
+
+/* ---- SCROLL REVEAL ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .metrics-strip { grid-template-columns: repeat(2, 1fr); }
+  .arch-grid { grid-template-columns: 1fr; gap: 16px; }
+  .connection-bridge {
+    flex-direction: row;
+    padding: 8px 0;
+  }
+  .connection-line {
+    width: 2px;
+    height: 40px;
+  }
+  .arch-modes { grid-template-columns: 1fr; }
+  .next-items { grid-template-columns: 1fr; }
+  .hero-meta { gap: 20px; }
+  .nav-links { display: none; }
+  .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .metrics-strip { grid-template-columns: 1fr; }
+  .metric-card .metric-value { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">mlx<span>/</span>gpt</a>
+    <ul class="nav-links">
+      <li><a href="#metrics">Metrics</a></li>
+      <li><a href="#architecture">Cluster</a></li>
+      <li><a href="#log">Log</a></li>
+      <li><a href="#next">Next</a></li>
+    </ul>
+    <span class="status-pill">Training</span>
+  </div>
+</nav>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid-bg"></div>
+    <div class="container">
+      <div class="hero-label">Open experiment &mdash; March 2026</div>
+      <h1>Training <span class="accent">GPT-2</span><br>on two Mac Minis</h1>
+      <p class="hero-sub">
+        An open project log documenting our path to train a GPT-2 level language model
+        natively on Apple Silicon using MLX and a Thunderbolt-connected cluster.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="label">Framework</span>
+          <span class="value">MLX + Metal</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="label">Architecture</span>
+          <span class="value">nanochat</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="label">Cluster</span>
+          <span class="value">2&times; Mac Mini</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="label">Interconnect</span>
+          <span class="value">Thunderbolt RDMA</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section id="metrics">
+    <div class="container">
+      <div class="metrics-strip reveal">
+        <div class="metric-card">
+          <div class="metric-label">Best Val Loss</div>
+          <div class="metric-value">3.797</div>
+          <div class="metric-delta">&darr; 22.5% from d10 baseline</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Training Steps</div>
+          <div class="metric-value">28<span class="unit">k</span></div>
+          <div class="metric-delta">d12-long run</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Model Depth</div>
+          <div class="metric-value">12<span class="unit"> layers</span></div>
+          <div class="metric-delta">next: d14</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Parallelism</div>
+          <div class="metric-value">DP<span class="unit"> + TP</span></div>
+          <div class="metric-delta">2-node distributed</div>
+        </div>
+      </div>
+
+      <!-- LOSS CHART -->
+      <div class="chart-section reveal">
+        <div class="chart-container">
+          <div class="chart-header">
+            <h3>Validation Loss Progression</h3>
+            <div class="chart-legend">
+              <div class="chart-legend-item">
+                <span class="dot" style="background: var(--text-dim)"></span>
+                d10
+              </div>
+              <div class="chart-legend-item">
+                <span class="dot" style="background: var(--amber-dim)"></span>
+                d12
+              </div>
+              <div class="chart-legend-item">
+                <span class="dot" style="background: var(--amber)"></span>
+                d12-long
+              </div>
+            </div>
+          </div>
+          <svg class="chart-svg" viewBox="0 0 1000 280" preserveAspectRatio="none">
+            <!-- Grid lines -->
+            <line x1="60" y1="20" x2="60" y2="240" stroke="#252a36" stroke-width="1"/>
+            <line x1="60" y1="240" x2="980" y2="240" stroke="#252a36" stroke-width="1"/>
+            <line x1="60" y1="60" x2="980" y2="60" stroke="#1e2230" stroke-width="0.5" stroke-dasharray="4,4"/>
+            <line x1="60" y1="120" x2="980" y2="120" stroke="#1e2230" stroke-width="0.5" stroke-dasharray="4,4"/>
+            <line x1="60" y1="180" x2="980" y2="180" stroke="#1e2230" stroke-width="0.5" stroke-dasharray="4,4"/>
+
+            <!-- Y-axis labels -->
+            <text x="50" y="24" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">6.0</text>
+            <text x="50" y="64" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">5.5</text>
+            <text x="50" y="124" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">5.0</text>
+            <text x="50" y="184" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">4.5</text>
+            <text x="50" y="244" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">4.0</text>
+
+            <!-- X-axis labels -->
+            <text x="60" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">0</text>
+            <text x="290" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">5k</text>
+            <text x="520" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">10k</text>
+            <text x="750" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">20k</text>
+            <text x="940" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">28k</text>
+
+            <!-- d10 run (shorter, plateaus higher) -->
+            <polyline
+              id="line-d10"
+              fill="none"
+              stroke="#55575c"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              points="60,20 120,52 180,80 240,105 300,125 360,138 420,145 460,148"
+              opacity="0.7"
+            />
+            <!-- d10 endpoint dot -->
+            <circle cx="460" cy="148" r="4" fill="#55575c" opacity="0.7"/>
+            <text x="472" y="144" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10">4.90</text>
+
+            <!-- d12 run (medium, stops lower) -->
+            <polyline
+              id="line-d12"
+              fill="none"
+              stroke="#b8832f"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              points="60,20 130,55 200,88 270,115 340,138 400,158 450,168 500,174"
+              opacity="0.8"
+            />
+            <circle cx="500" cy="174" r="4" fill="#b8832f" opacity="0.8"/>
+            <text x="512" y="170" fill="#b8832f" font-family="IBM Plex Mono, monospace" font-size="10">4.53</text>
+
+            <!-- d12-long run (longest, reaches best loss) -->
+            <defs>
+              <linearGradient id="line-glow" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#e5a33d" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="#e5a33d" stop-opacity="0.5"/>
+              </linearGradient>
+            </defs>
+            <!-- Glow line -->
+            <polyline
+              fill="none"
+              stroke="url(#line-glow)"
+              stroke-width="8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              points="60,20 140,58 220,94 300,126 380,155 460,178 540,196 620,208 700,216 780,222 860,228 940,232"
+            />
+            <!-- Main line -->
+            <polyline
+              id="line-d12-long"
+              fill="none"
+              stroke="#e5a33d"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              points="60,20 140,58 220,94 300,126 380,155 460,178 540,196 620,208 700,216 780,222 860,228 940,232"
+            />
+            <circle cx="940" cy="232" r="5" fill="#e5a33d"/>
+            <text x="910" y="248" fill="#e5a33d" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600">3.80</text>
+
+            <!-- Best loss reference line -->
+            <line x1="60" y1="232" x2="930" y2="232" stroke="#e5a33d" stroke-width="0.5" stroke-dasharray="3,6" opacity="0.3"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture">
+    <div class="container">
+      <div class="section-label reveal">Infrastructure</div>
+      <h2 class="section-title reveal">Cluster Architecture</h2>
+
+      <div class="arch-grid reveal">
+        <div class="node-card">
+          <div class="node-name">node-0.local</div>
+          <ul class="node-spec">
+            <li><span class="spec-key">Hardware</span><span class="spec-val">Mac Mini M4</span></li>
+            <li><span class="spec-key">Memory</span><span class="spec-val">Unified 24 GB</span></li>
+            <li><span class="spec-key">GPU</span><span class="spec-val">Metal (10-core)</span></li>
+            <li><span class="spec-key">Interface</span><span class="spec-val">en4 / rdma_en4</span></li>
+            <li><span class="spec-key">Role</span><span class="spec-val">Primary / rank 0</span></li>
+          </ul>
+        </div>
+
+        <div class="connection-bridge">
+          <div class="connection-label">Thunderbolt<br>JACCL / RDMA</div>
+          <div class="connection-line"></div>
+          <div class="connection-label">~40 Gbps</div>
+        </div>
+
+        <div class="node-card">
+          <div class="node-name">node-1.local</div>
+          <ul class="node-spec">
+            <li><span class="spec-key">Hardware</span><span class="spec-val">Mac Mini M4</span></li>
+            <li><span class="spec-key">Memory</span><span class="spec-val">Unified 24 GB</span></li>
+            <li><span class="spec-key">GPU</span><span class="spec-val">Metal (10-core)</span></li>
+            <li><span class="spec-key">Interface</span><span class="spec-val">en2 / rdma_en2</span></li>
+            <li><span class="spec-key">Role</span><span class="spec-val">Worker / rank 1</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="arch-modes reveal">
+        <div class="mode-card">
+          <h4>DP &mdash; Data Parallel</h4>
+          <div class="mode-full">Each node holds a full model replica</div>
+          <p>Different data shards per node. Gradients averaged via <code style="color: var(--amber); font-family: var(--mono); font-size: 13px;">all_sum</code> after each step. Scales batch size linearly with node count.</p>
+        </div>
+        <div class="mode-card">
+          <h4>TP &mdash; Tensor Parallel</h4>
+          <div class="mode-full">Model sharded across both nodes</div>
+          <p>Attention heads and MLP layers split column/row-wise. Vocab embeddings partitioned. Both nodes process the same batch simultaneously.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECT LOG -->
+  <section id="log">
+    <div class="container">
+      <div class="section-label reveal">Project Log</div>
+      <h2 class="section-title reveal">Training Timeline</h2>
+
+      <div class="timeline reveal">
+        <div class="timeline-entry active">
+          <div class="timeline-date">March 2026 &mdash; now</div>
+          <div class="timeline-title">d14 Experiments</div>
+          <div class="timeline-body">
+            Scaling to 14 layers. First proving run against the d12-long baseline.
+            Exploring whether deeper models continue the loss improvement trend
+            on this cluster configuration.
+          </div>
+          <span class="timeline-tag">in progress</span>
+        </div>
+
+        <div class="timeline-entry milestone">
+          <div class="timeline-date">March 17, 2026</div>
+          <div class="timeline-title">d12-long Baseline Locked</div>
+          <div class="timeline-body">
+            Long confirmation run completed 28,000 steps with early stopping.
+            Achieved best validation loss of <span class="timeline-metric">3.797</span>,
+            beating the shorter d12 by a wide margin. Exported cleanly and validated
+            over 2-node JACCL. Now the benchmark to beat.
+          </div>
+          <span class="timeline-tag">val_loss: 3.797</span>
+        </div>
+
+        <div class="timeline-entry milestone">
+          <div class="timeline-date">March 2026</div>
+          <div class="timeline-title">d12 Proving Run</div>
+          <div class="timeline-body">
+            First 12-layer experiment beat the d10 baseline convincingly.
+            Validation loss <span class="timeline-metric">4.530</span> showed
+            that deeper models were the right direction. Led directly to the
+            extended d12-long confirmation.
+          </div>
+          <span class="timeline-tag">val_loss: 4.530</span>
+        </div>
+
+        <div class="timeline-entry">
+          <div class="timeline-date">March 2026</div>
+          <div class="timeline-title">d10 Baseline Established</div>
+          <div class="timeline-body">
+            24-hour unattended optimization sweep over learning rates and weight decay.
+            Champion tracking with early stopping. Locked at validation loss
+            <span class="timeline-metric">4.904</span> as the first stable baseline.
+          </div>
+          <span class="timeline-tag">val_loss: 4.904</span>
+        </div>
+
+        <div class="timeline-entry">
+          <div class="timeline-date">March 2026</div>
+          <div class="timeline-title">MLX-Native Trainer Built</div>
+          <div class="timeline-body">
+            Replaced PyTorch conversion path with a native MLX training pipeline.
+            Full distributed support with DP and TP modes, checkpoint resume,
+            gradient accumulation, and early stopping. Pure Python + MLX.
+          </div>
+        </div>
+
+        <div class="timeline-entry">
+          <div class="timeline-date">March 2026</div>
+          <div class="timeline-title">Cluster Bootstrapped</div>
+          <div class="timeline-body">
+            Two Mac Minis connected via Thunderbolt cable. RDMA/JACCL configured.
+            Ring and JACCL backends verified with distributed smoke tests.
+            First successful multi-node forward pass.
+          </div>
+        </div>
+
+        <div class="timeline-entry">
+          <div class="timeline-date">March 2026</div>
+          <div class="timeline-title">Project Started</div>
+          <div class="timeline-body">
+            Forked Karpathy's nanochat architecture. Built MLX bridge for model
+            conversion and inference on Apple Silicon. First local smoke test passed.
+          </div>
+        </div>
+      </div>
+
+      <!-- SAMPLE OUTPUT -->
+      <div class="sample-block reveal">
+        <div class="sample-header">
+          <h4>Latest Model Output</h4>
+          <span class="model-tag">d12-long @ step 28000</span>
+        </div>
+        <div class="sample-prompt">prompt &gt; <span>"The capital of France is"</span></div>
+        <div class="sample-output">The capital of France is a great place to visit the city of Paris. The city is home to a wide range of people, including the city of Paris, the city of Paris,</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT'S NEXT -->
+  <section id="next">
+    <div class="container">
+      <div class="section-label reveal">Roadmap</div>
+      <h2 class="section-title reveal">What's Next</h2>
+
+      <div class="next-items reveal">
+        <div class="next-card">
+          <div class="next-status planned">Planned</div>
+          <h4>d14 Scale-Up</h4>
+          <p>Run a measured 14-layer DP experiment against the d12-long baseline. Test whether the loss improvement curve continues with increased depth on this cluster.</p>
+        </div>
+        <div class="next-card">
+          <div class="next-status planned">Planned</div>
+          <h4>Tensor Parallel Training</h4>
+          <p>Move from data parallel to tensor parallel for larger model configurations. Shard attention heads and MLP layers across both nodes to fit bigger models in memory.</p>
+        </div>
+        <div class="next-card">
+          <div class="next-status exploring">Exploring</div>
+          <h4>mx.fast.* Optimizations</h4>
+          <p>Replace hand-rolled RMS norm and RoPE with MLX's fused Metal kernels. Add mx.compile() for kernel fusion. Estimated 5-15% throughput improvement.</p>
+        </div>
+        <div class="next-card">
+          <div class="next-status exploring">Exploring</div>
+          <h4>Longer Training Runs</h4>
+          <p>Multi-day runs with the unattended ladder system. Champion tracking across depth and hyperparameter sweeps for the best model this cluster can produce.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-text">
+        mlxgpt.com &mdash; an open experiment in Apple Silicon ML training
+      </div>
+      <div class="footer-text">
+        Built with <a href="https://github.com/ml-explore/mlx" target="_blank" rel="noopener">MLX</a>
+        &middot; Based on <a href="https://github.com/karpathy/nanochat" target="_blank" rel="noopener">nanochat</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const revealElements = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+revealElements.forEach(el => observer.observe(el));
+
+// Animate chart lines on scroll
+const chartContainer = document.querySelector('.chart-container');
+if (chartContainer) {
+  const lines = chartContainer.querySelectorAll('polyline');
+  lines.forEach(line => {
+    const length = line.getTotalLength ? line.getTotalLength() : 1000;
+    line.style.strokeDasharray = length;
+    line.style.strokeDashoffset = length;
+    line.style.transition = 'none';
+  });
+
+  const chartObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const polylines = entry.target.querySelectorAll('polyline');
+        polylines.forEach((line, i) => {
+          setTimeout(() => {
+            line.style.transition = `stroke-dashoffset 1.5s ease-out`;
+            line.style.strokeDashoffset = '0';
+          }, i * 300);
+        });
+        chartObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  chartObserver.observe(chartContainer);
+}
+
+// Smooth scroll for nav links
+document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+</body>
+</html>
