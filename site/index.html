@@ -816,18 +816,18 @@ footer {
       <div class="metrics-strip reveal">
         <div class="metric-card">
           <div class="metric-label">Best Val Loss</div>
-          <div class="metric-value">3.797</div>
-          <div class="metric-delta">&darr; 22.5% from d10 baseline</div>
+          <div class="metric-value">3.710</div>
+          <div class="metric-delta">&darr; 24.3% from d10 baseline</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Training Steps</div>
-          <div class="metric-value">28<span class="unit">k</span></div>
-          <div class="metric-delta">d12-long run</div>
+          <div class="metric-value">25.5<span class="unit">k</span></div>
+          <div class="metric-delta">d14 run</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Model Depth</div>
-          <div class="metric-value">12<span class="unit"> layers</span></div>
-          <div class="metric-delta">next: d14</div>
+          <div class="metric-value">14<span class="unit"> layers</span></div>
+          <div class="metric-delta">next: d14-long + seq 1024</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Parallelism</div>
@@ -854,6 +854,10 @@ footer {
                 <span class="dot" style="background: var(--amber)"></span>
                 d12-long
               </div>
+              <div class="chart-legend-item">
+                <span class="dot" style="background: var(--green)"></span>
+                d14
+              </div>
             </div>
           </div>
           <svg class="chart-svg" viewBox="0 0 1000 280" preserveAspectRatio="none">
@@ -866,19 +870,22 @@ footer {
 
             <!-- Y-axis labels -->
             <text x="50" y="24" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">6.0</text>
-            <text x="50" y="64" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">5.5</text>
-            <text x="50" y="124" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">5.0</text>
-            <text x="50" y="184" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">4.5</text>
-            <text x="50" y="244" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">4.0</text>
+            <text x="50" y="68" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">5.5</text>
+            <text x="50" y="112" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">5.0</text>
+            <text x="50" y="156" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">4.5</text>
+            <text x="50" y="200" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">4.0</text>
+            <text x="50" y="244" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="end">3.5</text>
 
             <!-- X-axis labels -->
             <text x="60" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">0</text>
-            <text x="290" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">5k</text>
-            <text x="520" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">10k</text>
-            <text x="750" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">20k</text>
-            <text x="940" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">28k</text>
+            <text x="230" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">5k</text>
+            <text x="400" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">10k</text>
+            <text x="570" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">15k</text>
+            <text x="740" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">20k</text>
+            <text x="900" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">25k</text>
+            <text x="960" y="262" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10" text-anchor="middle">28k</text>
 
-            <!-- d10 run (shorter, plateaus higher) -->
+            <!-- d10 run (shorter, plateaus at 4.90) -->
             <polyline
               id="line-d10"
               fill="none"
@@ -886,14 +893,13 @@ footer {
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              points="60,20 120,52 180,80 240,105 300,125 360,138 420,145 460,148"
+              points="60,20 110,48 160,72 210,92 260,108 310,118 350,125 380,128"
               opacity="0.7"
             />
-            <!-- d10 endpoint dot -->
-            <circle cx="460" cy="148" r="4" fill="#55575c" opacity="0.7"/>
-            <text x="472" y="144" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10">4.90</text>
+            <circle cx="380" cy="128" r="4" fill="#55575c" opacity="0.7"/>
+            <text x="392" y="124" fill="#55575c" font-family="IBM Plex Mono, monospace" font-size="10">4.90</text>
 
-            <!-- d12 run (medium, stops lower) -->
+            <!-- d12 run (medium, stops at 4.53) -->
             <polyline
               id="line-d12"
               fill="none"
@@ -901,43 +907,66 @@ footer {
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
-              points="60,20 130,55 200,88 270,115 340,138 400,158 450,168 500,174"
+              points="60,20 120,50 180,78 240,102 300,122 360,138 410,148 440,152"
               opacity="0.8"
             />
-            <circle cx="500" cy="174" r="4" fill="#b8832f" opacity="0.8"/>
-            <text x="512" y="170" fill="#b8832f" font-family="IBM Plex Mono, monospace" font-size="10">4.53</text>
+            <circle cx="440" cy="152" r="4" fill="#b8832f" opacity="0.8"/>
+            <text x="452" y="148" fill="#b8832f" font-family="IBM Plex Mono, monospace" font-size="10">4.53</text>
 
-            <!-- d12-long run (longest, reaches best loss) -->
+            <!-- d12-long run (reaches 3.80) -->
             <defs>
               <linearGradient id="line-glow" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stop-color="#e5a33d" stop-opacity="0.2"/>
                 <stop offset="100%" stop-color="#e5a33d" stop-opacity="0.5"/>
               </linearGradient>
+              <linearGradient id="line-glow-green" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#4ade80" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#4ade80" stop-opacity="0.4"/>
+              </linearGradient>
             </defs>
-            <!-- Glow line -->
             <polyline
               fill="none"
               stroke="url(#line-glow)"
               stroke-width="8"
               stroke-linecap="round"
               stroke-linejoin="round"
-              points="60,20 140,58 220,94 300,126 380,155 460,178 540,196 620,208 700,216 780,222 860,228 940,232"
+              points="60,20 140,52 220,82 300,110 400,140 500,160 600,172 700,182 800,190 900,196"
             />
-            <!-- Main line -->
             <polyline
               id="line-d12-long"
               fill="none"
               stroke="#e5a33d"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              points="60,20 140,52 220,82 300,110 400,140 500,160 600,172 700,182 800,190 900,196"
+            />
+            <circle cx="900" cy="196" r="4" fill="#e5a33d"/>
+            <text x="908" y="192" fill="#e5a33d" font-family="IBM Plex Mono, monospace" font-size="10">3.80</text>
+
+            <!-- d14 run (new best at 3.71) -->
+            <polyline
+              fill="none"
+              stroke="url(#line-glow-green)"
+              stroke-width="8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              points="60,20 140,50 220,80 300,108 400,138 500,158 600,172 700,184 800,196 860,204"
+            />
+            <polyline
+              id="line-d14"
+              fill="none"
+              stroke="#4ade80"
               stroke-width="2.5"
               stroke-linecap="round"
               stroke-linejoin="round"
-              points="60,20 140,58 220,94 300,126 380,155 460,178 540,196 620,208 700,216 780,222 860,228 940,232"
+              points="60,20 140,50 220,80 300,108 400,138 500,158 600,172 700,184 800,196 860,204"
             />
-            <circle cx="940" cy="232" r="5" fill="#e5a33d"/>
-            <text x="910" y="248" fill="#e5a33d" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600">3.80</text>
+            <circle cx="860" cy="204" r="5" fill="#4ade80"/>
+            <text x="870" y="218" fill="#4ade80" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600">3.71</text>
 
             <!-- Best loss reference line -->
-            <line x1="60" y1="232" x2="930" y2="232" stroke="#e5a33d" stroke-width="0.5" stroke-dasharray="3,6" opacity="0.3"/>
+            <line x1="60" y1="204" x2="850" y2="204" stroke="#4ade80" stroke-width="0.5" stroke-dasharray="3,6" opacity="0.3"/>
           </svg>
         </div>
       </div>
@@ -1004,13 +1033,25 @@ footer {
       <div class="timeline reveal">
         <div class="timeline-entry active">
           <div class="timeline-date">March 2026 &mdash; now</div>
-          <div class="timeline-title">d14 Experiments</div>
+          <div class="timeline-title">d14-long + Sequence Length 1024</div>
           <div class="timeline-body">
-            Scaling to 14 layers. First proving run against the d12-long baseline.
-            Exploring whether deeper models continue the loss improvement trend
-            on this cluster configuration.
+            Extending d14 with doubled context window (512 &rarr; 1024 tokens) and
+            50k steps. Testing whether longer sequences unlock the next quality jump
+            beyond what depth alone can provide.
           </div>
-          <span class="timeline-tag">in progress</span>
+          <span class="timeline-tag">up next</span>
+        </div>
+
+        <div class="timeline-entry milestone">
+          <div class="timeline-date">March 18, 2026</div>
+          <div class="timeline-title">d14 Beats d12-long</div>
+          <div class="timeline-body">
+            14-layer model achieved best validation loss of <span class="timeline-metric">3.710</span>
+            at step 25,500, beating the d12-long champion (3.797) by 2.3%.
+            Ran on 2-node JACCL cluster at ~490 tokens/sec. Deeper models
+            continue to improve, but gains are flattening — next lever is sequence length.
+          </div>
+          <span class="timeline-tag">val_loss: 3.710</span>
         </div>
 
         <div class="timeline-entry milestone">
@@ -1082,10 +1123,10 @@ footer {
       <div class="sample-block reveal">
         <div class="sample-header">
           <h4>Latest Model Output</h4>
-          <span class="model-tag">d12-long @ step 28000</span>
+          <span class="model-tag">d14 @ step 25500</span>
         </div>
         <div class="sample-prompt">prompt &gt; <span>"The capital of France is"</span></div>
-        <div class="sample-output">The capital of France is a great place to visit the city of Paris. The city is home to a wide range of people, including the city of Paris, the city of Paris,</div>
+        <div class="sample-output">The capital of France is the largest city in the world, and the largest city in the world is the largest city in the world. The city is the largest city in the world,</div>
       </div>
     </div>
   </section>
@@ -1099,23 +1140,23 @@ footer {
       <div class="next-items reveal">
         <div class="next-card">
           <div class="next-status planned">Planned</div>
-          <h4>d14 Scale-Up</h4>
-          <p>Run a measured 14-layer DP experiment against the d12-long baseline. Test whether the loss improvement curve continues with increased depth on this cluster.</p>
+          <h4>d14-long + seq_len 1024</h4>
+          <p>Double the context window from 512 to 1024 tokens and train for 50k steps. Longer context is likely the biggest remaining lever for quality improvement.</p>
         </div>
         <div class="next-card">
           <div class="next-status planned">Planned</div>
-          <h4>Tensor Parallel Training</h4>
-          <p>Move from data parallel to tensor parallel for larger model configurations. Shard attention heads and MLP layers across both nodes to fit bigger models in memory.</p>
-        </div>
-        <div class="next-card">
-          <div class="next-status exploring">Exploring</div>
           <h4>mx.fast.* Optimizations</h4>
-          <p>Replace hand-rolled RMS norm and RoPE with MLX's fused Metal kernels. Add mx.compile() for kernel fusion. Estimated 5-15% throughput improvement.</p>
+          <p>Replace hand-rolled RMS norm and RoPE with MLX's fused Metal kernels. Add mx.compile() for kernel fusion. Estimated 5-15% throughput boost for faster iterations.</p>
         </div>
         <div class="next-card">
           <div class="next-status exploring">Exploring</div>
-          <h4>Longer Training Runs</h4>
-          <p>Multi-day runs with the unattended ladder system. Champion tracking across depth and hyperparameter sweeps for the best model this cluster can produce.</p>
+          <h4>Learning Rate Scheduling</h4>
+          <p>Cosine decay with warmup for deeper models. The d14 may benefit from a lower base LR or different schedule to avoid the plateau seen after step 25k.</p>
+        </div>
+        <div class="next-card">
+          <div class="next-status exploring">Exploring</div>
+          <h4>Tensor Parallel for d16+</h4>
+          <p>Move from data parallel to tensor parallel for even larger models. Shard attention heads and MLP layers across both nodes to push beyond what DP can fit.</p>
         </div>
       </div>
     </div>
