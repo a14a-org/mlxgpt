@@ -18,7 +18,7 @@ This is an open experiment documenting our path from zero to a working GPT-2 lev
 | d10 | 10 | 4.904 | 7,000 | baseline |
 | d12 | 12 | 4.530 | — | proved |
 | d12-long | 12 | 3.797 | 28,000 | previous best |
-| d14 | 14 | **3.710** | 25,500 | current best |
+| d14 | 14 | **3.506** | 29,750 | current best |
 | d14-long | 14 | — | — | up next (seq_len 1024) |
 
 ## Quick start

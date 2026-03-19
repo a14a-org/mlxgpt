@@ -816,13 +816,13 @@ footer {
       <div class="metrics-strip reveal">
         <div class="metric-card">
           <div class="metric-label">Best Val Loss</div>
-          <div class="metric-value">3.710</div>
-          <div class="metric-delta">&darr; 24.3% from d10 baseline</div>
+          <div class="metric-value">3.506</div>
+          <div class="metric-delta">&darr; 28.5% from d10 baseline</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Training Steps</div>
-          <div class="metric-value">25.5<span class="unit">k</span></div>
-          <div class="metric-delta">d14 run</div>
+          <div class="metric-value">29.8<span class="unit">k</span></div>
+          <div class="metric-delta">d14 run (early stop @ 31.6k)</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Model Depth</div>
@@ -944,14 +944,14 @@ footer {
             <circle cx="900" cy="196" r="4" fill="#e5a33d"/>
             <text x="908" y="192" fill="#e5a33d" font-family="IBM Plex Mono, monospace" font-size="10">3.80</text>
 
-            <!-- d14 run (new best at 3.71) -->
+            <!-- d14 run (new best at 3.506) -->
             <polyline
               fill="none"
               stroke="url(#line-glow-green)"
               stroke-width="8"
               stroke-linecap="round"
               stroke-linejoin="round"
-              points="60,20 140,50 220,80 300,108 400,138 500,158 600,172 700,184 800,196 860,204"
+              points="60,20 140,50 220,80 300,108 400,138 500,158 600,172 700,184 800,196 860,200 940,222"
             />
             <polyline
               id="line-d14"
@@ -960,13 +960,13 @@ footer {
               stroke-width="2.5"
               stroke-linecap="round"
               stroke-linejoin="round"
-              points="60,20 140,50 220,80 300,108 400,138 500,158 600,172 700,184 800,196 860,204"
+              points="60,20 140,50 220,80 300,108 400,138 500,158 600,172 700,184 800,196 860,200 940,222"
             />
-            <circle cx="860" cy="204" r="5" fill="#4ade80"/>
-            <text x="870" y="218" fill="#4ade80" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600">3.71</text>
+            <circle cx="940" cy="222" r="5" fill="#4ade80"/>
+            <text x="900" y="236" fill="#4ade80" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="600">3.51</text>
 
             <!-- Best loss reference line -->
-            <line x1="60" y1="204" x2="850" y2="204" stroke="#4ade80" stroke-width="0.5" stroke-dasharray="3,6" opacity="0.3"/>
+            <line x1="60" y1="222" x2="930" y2="222" stroke="#4ade80" stroke-width="0.5" stroke-dasharray="3,6" opacity="0.3"/>
           </svg>
         </div>
       </div>
@@ -1046,12 +1046,12 @@ footer {
           <div class="timeline-date">March 18, 2026</div>
           <div class="timeline-title">d14 Beats d12-long</div>
           <div class="timeline-body">
-            14-layer model achieved best validation loss of <span class="timeline-metric">3.710</span>
-            at step 25,500, beating the d12-long champion (3.797) by 2.3%.
-            Ran on 2-node JACCL cluster at ~490 tokens/sec. Deeper models
-            continue to improve, but gains are flattening — next lever is sequence length.
+            14-layer model achieved best validation loss of <span class="timeline-metric">3.506</span>
+            at step 29,750, decisively beating the d12-long champion (3.797) by 7.7%.
+            Early stopped at step 31,625 after a late-run improvement surge.
+            Ran on 2-node JACCL cluster at ~490 tokens/sec.
           </div>
-          <span class="timeline-tag">val_loss: 3.710</span>
+          <span class="timeline-tag">val_loss: 3.506</span>
         </div>
 
         <div class="timeline-entry milestone">
@@ -1123,10 +1123,10 @@ footer {
       <div class="sample-block reveal">
         <div class="sample-header">
           <h4>Latest Model Output</h4>
-          <span class="model-tag">d14 @ step 25500</span>
+          <span class="model-tag">d14 @ step 31500</span>
         </div>
         <div class="sample-prompt">prompt &gt; <span>"The capital of France is"</span></div>
-        <div class="sample-output">The capital of France is the largest city in the world, and the largest city in the world is the largest city in the world. The city is the largest city in the world,</div>
+        <div class="sample-output">The capital of France is a small, small, and small town. It is a small town, and is located in the middle of the city. It is a small town, and</div>
       </div>
     </div>
   </section>
