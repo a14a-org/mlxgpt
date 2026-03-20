@@ -3,8 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MLX GPT — Training GPT-2 on Mac Minis</title>
-<meta name="description" content="An open experiment training GPT-2 scale language models on a 2-node Mac Mini cluster using Apple's MLX framework and Thunderbolt RDMA.">
+<title>MLX GPT — Training GPT-2 on Two Mac Minis with Apple MLX</title>
+<meta name="description" content="Open project log: training GPT-2 scale language models on a 2-node Mac Mini M4 Pro cluster using Apple's MLX framework, Thunderbolt 5 RDMA, and Karpathy's nanochat architecture. Follow our progress from d10 to d14 and beyond.">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mlxgpt.com">
+<meta property="og:title" content="MLX GPT — Training GPT-2 on Two Mac Minis">
+<meta property="og:description" content="An open experiment training GPT-2 scale language models natively on Apple Silicon. 2x Mac Mini M4 Pro, Thunderbolt 5 RDMA, pure MLX. Follow the training log.">
+<meta property="og:site_name" content="MLX GPT">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MLX GPT — Training GPT-2 on Two Mac Minis">
+<meta name="twitter:description" content="Open experiment: GPT-2 training on Apple Silicon with MLX. 2x Mac Mini M4 Pro cluster, Thunderbolt 5 RDMA. No GPUs, no cloud.">
+
+<!-- SEO -->
+<meta name="robots" content="index, follow">
+<meta name="keywords" content="MLX, GPT-2, Apple Silicon, Mac Mini, M4 Pro, nanochat, machine learning, LLM training, Thunderbolt, RDMA, JACCL, distributed training">
+<meta name="author" content="mlxgpt.com">
+<link rel="canonical" href="https://mlxgpt.com">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MLX GPT",
+  "url": "https://mlxgpt.com",
+  "description": "Open project log: training GPT-2 scale language models on a 2-node Mac Mini M4 Pro cluster using Apple's MLX framework and Thunderbolt 5 RDMA."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "mlxgpt",
+  "codeRepository": "https://github.com/a14a-org/mlxgpt",
+  "programmingLanguage": "Python",
+  "runtimePlatform": "MLX",
+  "description": "Native MLX implementation for training GPT-2 scale models on Apple Silicon clusters"
+}
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
