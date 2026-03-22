@@ -19,7 +19,9 @@ This is an open experiment documenting our path from zero to a working GPT-2 lev
 | d12 | 12 | 4.530 | — | proved |
 | d12-long | 12 | 3.797 | 28,000 | previous best |
 | d14 | 14 | **3.506** | 29,750 | current best |
-| d14-long | 14 | — | — | up next (seq_len 1024) |
+| d14-long | 14 | — | — | training now (bf16, 4530 tok/s) |
+
+**Breakthrough:** bfloat16 training yields 9x throughput (500 → 4,530 tok/s). A d14 run now completes in ~3 hours instead of 4 days.
 
 ## Quick start
 
