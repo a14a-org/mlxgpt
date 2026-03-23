@@ -18,10 +18,15 @@ This is an open experiment documenting our path from zero to a working GPT-2 lev
 | d10 | 10 | 4.904 | 7,000 | baseline |
 | d12 | 12 | 4.530 | — | proved |
 | d12-long | 12 | 3.797 | 28,000 | previous best |
-| d14 | 14 | **3.506** | 29,750 | current best |
-| d14-long | 14 | — | — | training now (bf16, 4530 tok/s) |
+| d14 | 14 | **3.506** | 29,750 | current best (f32) |
+| d14-long bf16 | 14 | 5.012 | 20,000 | 4,530 tok/s, plateaued early |
+| d14-long mixed | 14 | 3.634 | 21,800 | 3,830 tok/s, 3.6% from champion |
 
-**Breakthrough:** bfloat16 training yields 9x throughput (500 → 4,530 tok/s). A d14 run now completes in ~3 hours instead of 4 days.
+**Key findings:**
+- bfloat16 gives 9x throughput (500 → 4,530 tok/s) but converges poorly (val 5.01)
+- Mixed precision (bf16 + f32 optimizer) reaches 3.634 at 7.5x speed but diverges late
+- Precomputed masks + cached RoPE + fused QK scale gives 1.63x throughput in f32
+- 29 automated optimization experiments identified batch size and precision as top levers
 
 ## Quick start
 

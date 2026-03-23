@@ -1027,18 +1027,18 @@ footer {
         </div>
         <div class="metric-card">
           <div class="metric-label">Throughput</div>
-          <div class="metric-value">4,530<span class="unit"> tok/s</span></div>
-          <div class="metric-delta">&uarr; 9x after bfloat16 optimization</div>
+          <div class="metric-value">3,830<span class="unit"> tok/s</span></div>
+          <div class="metric-delta">mixed precision (bf16 + f32 opt)</div>
         </div>
         <div class="metric-card">
           <div class="metric-label">Model Depth</div>
           <div class="metric-value">14<span class="unit"> layers</span></div>
-          <div class="metric-delta">d14-long training now (seq 1024)</div>
+          <div class="metric-delta">seq_len 1024, precomputed RoPE</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Est. d14-long</div>
-          <div class="metric-value">~3<span class="unit"> hours</span></div>
-          <div class="metric-delta">was ~4 days before bf16</div>
+          <div class="metric-label">Experiments</div>
+          <div class="metric-value">29<span class="unit">+</span></div>
+          <div class="metric-delta">automated optimization suite</div>
         </div>
       </div>
 
@@ -1313,27 +1313,40 @@ footer {
 
       <div class="timeline reveal">
         <div class="timeline-entry active">
-          <div class="timeline-date">March 22, 2026 &mdash; now</div>
-          <div class="timeline-title">d14-long bf16 Training (seq_len 1024)</div>
+          <div class="timeline-date">March 23, 2026 &mdash; now</div>
+          <div class="timeline-title">Optimized f32 Run + Precomputed RoPE/Masks</div>
           <div class="timeline-body">
-            Training with bfloat16 precision at <span class="timeline-metric">4,530 tok/s</span> &mdash;
-            a 9x speedup over our previous float32 runs (~500 tok/s). What would have taken 4 days
-            now completes in ~3 hours. 14 layers, seq_len 1024, targeting 50k steps.
+            Starting fresh f32 run with precomputed attention masks, cached RoPE tables, and
+            fused QK scale &mdash; benchmarked at <span class="timeline-metric">1.63x</span> throughput
+            improvement. Combined with the proven f32 convergence quality that reaches 3.506.
           </div>
-          <span class="timeline-tag">training now &mdash; ~4,530 tok/s</span>
+          <span class="timeline-tag">starting</span>
+        </div>
+
+        <div class="timeline-entry milestone">
+          <div class="timeline-date">March 22-23, 2026</div>
+          <div class="timeline-title">Mixed Precision Experiment: val 3.634</div>
+          <div class="timeline-body">
+            Mixed precision (bf16 forward + f32 optimizer) achieved val loss <span class="timeline-metric">3.634</span>
+            at 3,830 tok/s &mdash; 7.5x faster than f32 and much better convergence than pure bf16 (5.01).
+            Came within 3.6% of the d14 champion but diverged late in training. Key finding: pure bf16
+            plateaus early, mixed precision gets close but accumulates rounding errors over many steps.
+          </div>
+          <span class="timeline-tag">val_loss: 3.634 &mdash; 3.6% from champion</span>
         </div>
 
         <div class="timeline-entry milestone">
           <div class="timeline-date">March 22, 2026</div>
-          <div class="timeline-title">bfloat16 Optimization: 9x Speedup</div>
+          <div class="timeline-title">Optimization Deep Dive: 29 Experiments</div>
           <div class="timeline-body">
-            Discovered that casting model weights to bfloat16 yields a massive throughput gain
-            on M4 Pro &mdash; from ~500 tok/s to <span class="timeline-metric">4,530 tok/s</span>.
-            Benchmarked locally across multiple configs (d2-d4, batch 2-16, seq 256-1024),
-            confirmed 1.45-1.67x locally, then 9x on the cluster. This changes the project timeline
-            from months to weeks for GPT-2 scale training.
+            Ran automated optimization suite testing bf16, batch sizes (2-16), cache limits,
+            fused QK scale, cached RoPE, Muon optimizer, LR schedules, gradient clipping.
+            Key wins: bf16 <span class="timeline-metric">1.45x</span>, batch=16
+            <span class="timeline-metric">1.71x</span>, precomputed masks+RoPE
+            <span class="timeline-metric">1.63x</span>. Also investigated flash-moe's Metal
+            optimizations &mdash; confirmed no memory compressor thrashing on our cluster.
           </div>
-          <span class="timeline-tag">9x throughput</span>
+          <span class="timeline-tag">29 experiments</span>
         </div>
 
         <div class="timeline-entry milestone">
@@ -1436,33 +1449,33 @@ footer {
         </div>
 
         <div>
-          <div style="font-family: var(--mono); font-size: 11px; color: var(--blue); margin-bottom: 6px;">d14-long (training) &mdash; val_loss: 4.559 (step 6,000 &mdash; still early)</div>
-          <div class="sample-output" style="border-left-color: var(--blue);">The capital of France is a very important part of the world's most important and most important part of the world's world. It is a very important part of the world's world, and it is a very important part of the world's world.</div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--blue); margin-bottom: 6px;">d14-long mixed &mdash; val_loss: 3.634 (step 22,000)</div>
+          <div class="sample-output" style="border-left-color: var(--blue);">The capital of France is a city that is home to a rich and diverse population. The city is home to a diverse population, including the population, population, and the diversity of people.</div>
         </div>
       </div>
 
-      <!-- LIVE TRAINING STATUS -->
+      <!-- PRECISION COMPARISON -->
       <div class="live-block reveal">
         <div class="live-header">
-          <h4>d14-long bf16 Training in Progress</h4>
-          <span class="model-tag">bfloat16 &middot; seq_len 1024 &middot; 50k steps</span>
+          <h4>Precision Experiments Summary</h4>
+          <span class="model-tag">d14-long &middot; seq_len 1024</span>
         </div>
         <div class="live-stats">
           <div class="live-stat">
-            <div class="live-stat-label">Step</div>
-            <div class="live-stat-value">1.6<span class="live-unit">k / 50k</span></div>
+            <div class="live-stat-label">f32 (baseline)</div>
+            <div class="live-stat-value">3.51<span class="live-unit"> val &middot; 500 tok/s</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">Val Loss</div>
-            <div class="live-stat-value">5.74</div>
+            <div class="live-stat-label">Pure bf16</div>
+            <div class="live-stat-value">5.01<span class="live-unit"> val &middot; 4,530 tok/s</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">Throughput</div>
-            <div class="live-stat-value">4,530<span class="live-unit"> tok/s</span></div>
+            <div class="live-stat-label">Mixed (bf16+f32)</div>
+            <div class="live-stat-value">3.63<span class="live-unit"> val &middot; 3,830 tok/s</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">ETA</div>
-            <div class="live-stat-value">~3<span class="live-unit"> hours</span></div>
+            <div class="live-stat-label">Next: f32+precomp</div>
+            <div class="live-stat-value">~815<span class="live-unit"> tok/s (est.)</span></div>
           </div>
         </div>
       </div>
@@ -1478,24 +1491,24 @@ footer {
 
       <div class="next-items reveal">
         <div class="next-card">
-          <div class="next-status planned" style="color: var(--green);">Running now</div>
-          <h4>d14-long bf16 (seq_len 1024)</h4>
-          <p>Training now at 4,530 tok/s with bfloat16. 50k steps in ~3 hours instead of 4 days. Targeting val loss below 3.51 (d14 champion).</p>
+          <div class="next-status planned" style="color: var(--green);">Starting now</div>
+          <h4>f32 + Precomputed Optimizations</h4>
+          <p>Fresh f32 run with precomputed masks, cached RoPE, and fused QK scale (1.63x local benchmark). Proven f32 convergence to 3.506 with faster throughput.</p>
         </div>
         <div class="next-card">
           <div class="next-status planned">Planned</div>
           <h4>Scale to d20</h4>
-          <p>~500M parameter model with seq_len 2048. With bf16 throughput gains, estimated ~2 days instead of the previously projected 3-4 weeks. Now realistic.</p>
+          <p>~500M parameter model with seq_len 2048. With throughput optimizations, estimated ~3-5 days. The next major milestone toward GPT-2 quality.</p>
         </div>
         <div class="next-card">
           <div class="next-status planned">Planned</div>
           <h4>Warmup + Cosine LR Schedule</h4>
-          <p>Local experiments showed 5% better convergence with warmup + cosine decay vs flat LR. Free to implement, no throughput cost.</p>
+          <p>Local experiments showed 5% better convergence with warmup + cosine decay vs flat LR. Free to implement, deploying on next run.</p>
         </div>
         <div class="next-card">
           <div class="next-status exploring">Exploring</div>
-          <h4>Larger Batch Size</h4>
-          <p>Local benchmarks show device_batch_size 16 gives 1.7x over batch 2. Combined with bf16, could push throughput past 7,000 tok/s on the cluster.</p>
+          <h4>Stable Mixed Precision</h4>
+          <p>Mixed precision reached 3.634 at 7.5x speed but diverged late. Investigating LR scheduling, gradient clipping, and loss scaling to stabilize for longer runs.</p>
         </div>
       </div>
     </div>
