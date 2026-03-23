@@ -20,13 +20,16 @@ This is an open experiment documenting our path from zero to a working GPT-2 lev
 | d12-long | 12 | 3.797 | 28,000 | previous best |
 | d14 | 14 | **3.506** | 29,750 | current best (f32) |
 | d14-long bf16 | 14 | 5.012 | 20,000 | 4,530 tok/s, plateaued early |
-| d14-long mixed | 14 | 3.634 | 21,800 | 3,830 tok/s, 3.6% from champion |
+| d14-long mixed | 14 | 3.634 | 21,800 | 3,830 tok/s, diverged late |
+| d14-long opt f32 | 14 | 3.634 | 21,800 | 3,000 tok/s, same ceiling |
+| d14 opt (seq512) | 14 | — | — | training now, 3,000 tok/s |
 
 **Key findings:**
-- bfloat16 gives 9x throughput (500 → 4,530 tok/s) but converges poorly (val 5.01)
-- Mixed precision (bf16 + f32 optimizer) reaches 3.634 at 7.5x speed but diverges late
-- Precomputed masks + cached RoPE + fused QK scale gives 1.63x throughput in f32
+- Precomputed masks + cached RoPE + fused QK scale: 6x throughput (500 → 3,000 tok/s)
+- seq_len=1024 diverges at val 3.634 regardless of precision — needs LR scheduling
+- seq_len=512 reaches 3.506 without divergence — proven convergence path
 - 29 automated optimization experiments identified batch size and precision as top levers
+- Pure bf16 is fast (9x) but converges poorly; mixed precision is fast (7.5x) but same ceiling as f32
 
 ## Quick start
 
