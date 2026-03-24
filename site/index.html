@@ -1313,14 +1313,28 @@ footer {
 
       <div class="timeline reveal">
         <div class="timeline-entry active">
-          <div class="timeline-date">March 23, 2026 &mdash; now</div>
-          <div class="timeline-title">Optimized f32 + seq_len 512 (proven config)</div>
+          <div class="timeline-date">March 24, 2026 &mdash; now</div>
+          <div class="timeline-title">d14 v2: Extended Run Without Champion Gate</div>
           <div class="timeline-body">
-            Running the proven d14 config (seq_len=512, which reached 3.506) with precomputed
-            RoPE/masks optimizations at <span class="timeline-metric">~3,000 tok/s</span>.
-            Should match champion quality in ~5 hours instead of 2 days.
+            Previous runs early-stopped at val 4.17 due to champion comparison threshold.
+            The original d14 needed 30k steps to reach 3.506 &mdash; our re-runs were killed at 16.5k.
+            Now running with patience-only stopping (no champion ratio) to let the model
+            converge fully at <span class="timeline-metric">~2,060 tok/s</span>.
           </div>
-          <span class="timeline-tag">training now &mdash; ~3,000 tok/s</span>
+          <span class="timeline-tag">training now &mdash; patience-only early stop</span>
+        </div>
+
+        <div class="timeline-entry">
+          <div class="timeline-date">March 23, 2026</div>
+          <div class="timeline-title">Investigation: Why Can't We Reproduce 3.506?</div>
+          <div class="timeline-body">
+            Both optimized and original model.py converge to identical val loss (4.170) &mdash;
+            confirming code changes are innocent. The original champion trained to 32k steps
+            with early stop at ~30k. Our re-runs early-stopped at 16.5k due to the
+            <code>--early-stop-vs-champion-ratio 1.25</code> gate killing the run before
+            convergence. The model needs more steps.
+          </div>
+          <span class="timeline-tag">root cause: premature early stop</span>
         </div>
 
         <div class="timeline-entry milestone">
@@ -1506,8 +1520,8 @@ footer {
       <div class="next-items reveal">
         <div class="next-card">
           <div class="next-status planned" style="color: var(--green);">Running now</div>
-          <h4>d14 Optimized (seq_len 512)</h4>
-          <p>Proven config at 6x speed. seq_len=512 reaches 3.506 without divergence. With precomputed optimizations, ~5 hours to completion at 3,000 tok/s.</p>
+          <h4>d14 v2 (40k steps, no champion gate)</h4>
+          <p>Original code, patience-only stopping. Letting the model train to 40k steps at 2,060 tok/s. Previous runs stopped too early at 16.5k due to champion comparison.</p>
         </div>
         <div class="next-card">
           <div class="next-status planned">Planned</div>
