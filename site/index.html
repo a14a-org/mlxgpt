@@ -1314,14 +1314,26 @@ footer {
       <div class="timeline reveal">
         <div class="timeline-entry active">
           <div class="timeline-date">March 24, 2026 &mdash; now</div>
-          <div class="timeline-title">d14 v2: Extended Run Without Champion Gate</div>
+          <div class="timeline-title">Planning d20 Scale-Up</div>
           <div class="timeline-body">
-            Previous runs early-stopped at val 4.17 due to champion comparison threshold.
-            The original d14 needed 30k steps to reach 3.506 &mdash; our re-runs were killed at 16.5k.
-            Now running with patience-only stopping (no champion ratio) to let the model
-            converge fully at <span class="timeline-metric">~2,060 tok/s</span>.
+            With d14 champion reproduced at 4x speed, the next step is scaling to d20
+            (~500M parameters, seq_len 2048). This is the path toward GPT-2 quality on
+            Apple Silicon. Estimated ~5-7 days on the current 2-node cluster.
           </div>
-          <span class="timeline-tag">training now &mdash; patience-only early stop</span>
+          <span class="timeline-tag">next milestone</span>
+        </div>
+
+        <div class="timeline-entry milestone">
+          <div class="timeline-date">March 24, 2026</div>
+          <div class="timeline-title">d14 Champion Reproduced at 4x Speed</div>
+          <div class="timeline-body">
+            d14 v2 matched the original champion exactly &mdash; val loss
+            <span class="timeline-metric">3.506</span> at step 29,750, identical to the
+            original run. Completed in ~15 hours at 2,065 tok/s vs the original's ~60 hours
+            at 500 tok/s. The 4x speedup comes from the reconfigured RDMA setup after
+            the cluster reboots. Proven: the training pipeline is fully reproducible.
+          </div>
+          <span class="timeline-tag">val_loss: 3.506 &mdash; champion matched, 4x faster</span>
         </div>
 
         <div class="timeline-entry">
@@ -1482,28 +1494,28 @@ footer {
         </div>
       </div>
 
-      <!-- LIVE TRAINING STATUS -->
+      <!-- RESULTS SUMMARY -->
       <div class="live-block reveal">
         <div class="live-header">
-          <h4>d14 Optimized f32 Training</h4>
-          <span class="model-tag">seq_len 512 &middot; precomputed RoPE/masks &middot; 40k steps</span>
+          <h4>d14 Training Complete</h4>
+          <span class="model-tag">champion reproduced &middot; 4x faster</span>
         </div>
         <div class="live-stats">
           <div class="live-stat">
+            <div class="live-stat-label">Best Val Loss</div>
+            <div class="live-stat-value">3.506</div>
+          </div>
+          <div class="live-stat">
             <div class="live-stat-label">Throughput</div>
-            <div class="live-stat-value">~3,000<span class="live-unit"> tok/s</span></div>
+            <div class="live-stat-value">2,065<span class="live-unit"> tok/s</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">Speedup</div>
-            <div class="live-stat-value">6x<span class="live-unit"> vs original f32</span></div>
+            <div class="live-stat-label">Training Time</div>
+            <div class="live-stat-value">~15<span class="live-unit"> hours</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">Target</div>
-            <div class="live-stat-value">&lt;3.51<span class="live-unit"> val loss</span></div>
-          </div>
-          <div class="live-stat">
-            <div class="live-stat-label">ETA</div>
-            <div class="live-stat-value">~5<span class="live-unit"> hours</span></div>
+            <div class="live-stat-label">Next</div>
+            <div class="live-stat-value">d20<span class="live-unit"> (~500M params)</span></div>
           </div>
         </div>
       </div>
@@ -1519,24 +1531,24 @@ footer {
 
       <div class="next-items reveal">
         <div class="next-card">
-          <div class="next-status planned" style="color: var(--green);">Running now</div>
-          <h4>d14 v2 (40k steps, no champion gate)</h4>
-          <p>Original code, patience-only stopping. Letting the model train to 40k steps at 2,060 tok/s. Previous runs stopped too early at 16.5k due to champion comparison.</p>
+          <div class="next-status planned" style="color: var(--green);">Next up</div>
+          <h4>Scale to d20 (~500M params)</h4>
+          <p>The big step toward GPT-2. ~500M parameters, seq_len 2048. At 2,065 tok/s, estimated 5-7 days. Needs careful memory management on 2x 64GB nodes.</p>
         </div>
         <div class="next-card">
           <div class="next-status planned">Planned</div>
-          <h4>LR Schedule for seq_len 1024</h4>
-          <p>seq_len=1024 diverges at val 3.63 with flat LR. Warmup+cosine decay should fix this, unlocking longer context training without the late instability.</p>
-        </div>
-        <div class="next-card">
-          <div class="next-status planned">Planned</div>
-          <h4>Scale to d20</h4>
-          <p>~500M parameter model. With 6x optimized throughput, estimated ~3-5 days. The next major milestone toward GPT-2 quality on Apple Silicon.</p>
+          <h4>Warmup + Cosine LR Schedule</h4>
+          <p>Local experiments showed 5% better convergence. For d20 with seq_len 2048, LR scheduling is likely essential to avoid the divergence we saw at seq_len 1024.</p>
         </div>
         <div class="next-card">
           <div class="next-status exploring">Exploring</div>
           <h4>3rd Mac Mini Node</h4>
-          <p>Adding a 3rd M4 Pro would give ~50% more throughput in DP mode and unlock d24 (730M params) in TP mode. Makes GPT-2 in under a week feasible.</p>
+          <p>Adding a 3rd M4 Pro gives ~50% more throughput in DP and unlocks d24 (730M params) in TP mode. Makes GPT-2 quality in under 2 weeks feasible.</p>
+        </div>
+        <div class="next-card">
+          <div class="next-status exploring">Exploring</div>
+          <h4>d24 — GPT-2 Target</h4>
+          <p>~730M parameters. The nanochat community's benchmark target. With 3 nodes in TP mode, estimated 1-2 weeks. The end goal of this project.</p>
         </div>
       </div>
     </div>
