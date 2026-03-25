@@ -25,6 +25,7 @@ This is an open experiment documenting our path from zero to a working GPT-2 lev
 | d14 opt (seq512) | 14 | 4.170 | 14,750 | early stopped (champion gate) |
 | d14 orig (seq512) | 14 | 4.170 | 14,750 | same — code changes are innocent |
 | **d14 v2** | **14** | **3.506** | **29,750** | **champion reproduced, 4x faster (2,065 tok/s)** |
+| d20 (no VE) | 20 | — | — | training now, 284 tok/s, 477M params |
 
 **Key findings:**
 - Precomputed masks + cached RoPE + fused QK scale: 6x throughput (500 → 3,000 tok/s)

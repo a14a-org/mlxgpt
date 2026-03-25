@@ -1313,14 +1313,29 @@ footer {
 
       <div class="timeline reveal">
         <div class="timeline-entry active">
-          <div class="timeline-date">March 24, 2026 &mdash; now</div>
-          <div class="timeline-title">Planning d20 Scale-Up</div>
+          <div class="timeline-date">March 25, 2026 &mdash; now</div>
+          <div class="timeline-title">d20 Training (no VE, cosine LR)</div>
           <div class="timeline-body">
-            With d14 champion reproduced at 4x speed, the next step is scaling to d20
-            (~500M parameters, seq_len 2048). This is the path toward GPT-2 quality on
-            Apple Silicon. Estimated ~5-7 days on the current 2-node cluster.
+            Training 20-layer model (~477M params) at <span class="timeline-metric">284 tok/s</span>
+            with cosine LR schedule. Removed value embeddings after discovering they added 419M params
+            (47% of the model) for negligible convergence benefit &mdash; a 42% throughput improvement.
+            Targeting 70k steps over ~2.8 days.
           </div>
-          <span class="timeline-tag">next milestone</span>
+          <span class="timeline-tag">training now &mdash; 284 tok/s</span>
+        </div>
+
+        <div class="timeline-entry milestone">
+          <div class="timeline-date">March 25, 2026</div>
+          <div class="timeline-title">Discovery: Value Embeddings are 47% of Model</div>
+          <div class="timeline-body">
+            Performance investigation revealed value embeddings add <span class="timeline-metric">419M params</span>
+            (10 full-vocab embedding tables) to the d20 model for near-zero convergence benefit.
+            Local benchmarks confirmed: removing VE gives 28% faster throughput with identical loss.
+            The model is memory-bandwidth-bound, and VE are pure bandwidth cost with no compute.
+            Also confirmed the 200 tok/s "regression" was actually the correct rate for a 897M param model
+            &mdash; the earlier 800 tok/s was an artifact of cosine warmup's near-zero optimizer work.
+          </div>
+          <span class="timeline-tag">47% param reduction</span>
         </div>
 
         <div class="timeline-entry milestone">
@@ -1494,28 +1509,28 @@ footer {
         </div>
       </div>
 
-      <!-- RESULTS SUMMARY -->
+      <!-- LIVE TRAINING STATUS -->
       <div class="live-block reveal">
         <div class="live-header">
-          <h4>d14 Training Complete</h4>
-          <span class="model-tag">champion reproduced &middot; 4x faster</span>
+          <h4>d20 Training in Progress (no VE)</h4>
+          <span class="model-tag">477M params &middot; cosine LR &middot; seq_len 1024</span>
         </div>
         <div class="live-stats">
           <div class="live-stat">
-            <div class="live-stat-label">Best Val Loss</div>
-            <div class="live-stat-value">3.506</div>
-          </div>
-          <div class="live-stat">
             <div class="live-stat-label">Throughput</div>
-            <div class="live-stat-value">2,065<span class="live-unit"> tok/s</span></div>
+            <div class="live-stat-value">284<span class="live-unit"> tok/s</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">Training Time</div>
-            <div class="live-stat-value">~15<span class="live-unit"> hours</span></div>
+            <div class="live-stat-label">Params</div>
+            <div class="live-stat-value">477<span class="live-unit">M (no VE)</span></div>
           </div>
           <div class="live-stat">
-            <div class="live-stat-label">Next</div>
-            <div class="live-stat-value">d20<span class="live-unit"> (~500M params)</span></div>
+            <div class="live-stat-label">Target</div>
+            <div class="live-stat-value">70<span class="live-unit">k steps</span></div>
+          </div>
+          <div class="live-stat">
+            <div class="live-stat-label">ETA</div>
+            <div class="live-stat-value">~2.8<span class="live-unit"> days</span></div>
           </div>
         </div>
       </div>
@@ -1531,9 +1546,9 @@ footer {
 
       <div class="next-items reveal">
         <div class="next-card">
-          <div class="next-status planned" style="color: var(--green);">Next up</div>
-          <h4>Scale to d20 (~500M params)</h4>
-          <p>The big step toward GPT-2. ~500M parameters, seq_len 2048. At 2,065 tok/s, estimated 5-7 days. Needs careful memory management on 2x 64GB nodes.</p>
+          <div class="next-status planned" style="color: var(--green);">Running now</div>
+          <h4>d20 without VE (477M params)</h4>
+          <p>Training now at 284 tok/s with cosine LR. Removed value embeddings (419M params, 47% of model) for 42% throughput boost with no quality loss. ETA ~2.8 days.</p>
         </div>
         <div class="next-card">
           <div class="next-status planned">Planned</div>
