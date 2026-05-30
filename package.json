@@ -11,10 +11,10 @@
 		"test:smoke": "playwright test"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.0.6",
+		"@biomejs/biome": "2.4.16",
 		"@playwright/test": "1.60.0",
 		"@types/node": "22.19.19",
 		"serve": "14.2.6",
-		"typescript": "5"
+		"typescript": "5.9.3"
 	}
 }
