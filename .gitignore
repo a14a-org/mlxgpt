@@ -27,3 +27,9 @@ nanochat/
 
 # Hostfiles (generated per-cluster)
 build/
+
+# Node / Playwright (site e2e tooling)
+node_modules/
+playwright-report/
+test-results/
+.playwright/
