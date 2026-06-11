@@ -967,6 +967,18 @@ footer {
 }
 </style>
 <script defer src="https://analytics.a14a.org/script.js" data-website-id="8f50186e-74cb-4d63-978d-bd4987e04b2b"></script>
+
+<!-- Error tracking via GlitchTip (Sentry-SDK compatible). Loaded from the
+     pinned Sentry browser CDN bundle with Subresource Integrity. The DSN is a
+     public client-side identifier (safe to expose). Initialized only on the
+     production host so localhost / preview traffic does not report errors;
+     performance tracing is disabled (tracesSampleRate: 0). -->
+<script
+  src="https://browser.sentry-cdn.com/8.55.0/bundle.min.js"
+  integrity="sha384-BlRl+vkcjdIA/AKRb8zWtiqlVVXepUsSv0+vho7ZMUTsNudEyQjGUKo9W86Hc1EC"
+  crossorigin="anonymous"
+  onload="(function(){if(window.Sentry&&location.hostname==='mlxgpt.com'){Sentry.init({dsn:'https://f6269442fb5f4cafa14a88d319ef89ae@errors.a14a.org/14',environment:'production',tracesSampleRate:0,replaysSessionSampleRate:0,replaysOnErrorSampleRate:0});}})();"
+></script>
 </head>
 <body>
 
