@@ -5,7 +5,7 @@ description = "Apple Silicon experiments for nanochat and MLX"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "mlx>=0.31.2",
+    "mlx>=0.32.0",
     "numpy>=2.5.1",
     "safetensors>=0.8.0",
     "tiktoken>=0.13.0",
