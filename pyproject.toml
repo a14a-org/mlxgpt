@@ -14,7 +14,7 @@ dependencies = [
 
 [project.optional-dependencies]
 convert = [
-    "torch>=2.12.1",
+    "torch>=2.13.0",
 ]
 train = [
     "pyarrow>=22.0.0",
