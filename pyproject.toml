@@ -17,7 +17,7 @@ convert = [
     "torch>=2.13.0",
 ]
 train = [
-    "pyarrow>=22.0.0",
+    "pyarrow>=25.0.0",
 ]
 
 [tool.setuptools.packages.find]
