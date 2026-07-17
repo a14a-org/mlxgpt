@@ -83,6 +83,13 @@ To run distributed training on your own Mac Mini cluster:
 
 All cluster scripts accept environment variables for node hostnames, IPs, and interfaces. See each script header for available options.
 
+## Website analytics
+
+The static site loads ChiliTrack alongside the existing Umami tracker using a
+provisioned production website ID. The nginx container accepts an optional
+`NEXT_PUBLIC_CHILITRACK_WEBSITE_ID` runtime override; values must be UUIDs.
+Only ChiliTrack core page and custom-event analytics are enabled.
+
 ## Project structure
 
 ```
