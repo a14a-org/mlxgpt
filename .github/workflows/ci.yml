@@ -96,12 +96,14 @@ jobs:
 
       - name: Smoke production container and analytics tag
         run: |
-          container_id="$(docker run --detach --publish 127.0.0.1:18080:80 \
+          container_id="$(docker run --detach --publish 127.0.0.1::80 \
             --env NEXT_PUBLIC_CHILITRACK_WEBSITE_ID=11111111-2222-4333-8444-555555555555 \
             mlxgpt-site:ci)"
           trap 'docker rm --force "$container_id" >/dev/null 2>&1 || true' EXIT
+          host_port="$(docker port "$container_id" 80/tcp | sed -n 's/.*://p' | head -n 1)"
+          test -n "$host_port"
           for _ in $(seq 1 20); do
-            if curl --fail --silent http://127.0.0.1:18080/ > /tmp/index.html; then
+            if curl --fail --silent "http://127.0.0.1:${host_port}/" > /tmp/index.html; then
               break
             fi
             sleep 1
