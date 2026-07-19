@@ -84,7 +84,11 @@ jobs:
           retention-days: 7
 
   analytics-container-smoke:
-    runs-on: self-hosted
+    # This repository is public. The organization runner group deliberately
+    # rejects public repositories so untrusted workflow changes cannot execute
+    # on our infrastructure. Keep this Docker-only gate on an isolated hosted
+    # Linux runner until a dedicated ephemeral public-repo runner exists.
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
