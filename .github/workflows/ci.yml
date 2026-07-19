@@ -82,3 +82,36 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  analytics-container-smoke:
+    # This repository is public. The organization runner group deliberately
+    # rejects public repositories so untrusted workflow changes cannot execute
+    # on our infrastructure. Keep this Docker-only gate on an isolated hosted
+    # Linux runner until a dedicated ephemeral public-repo runner exists.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Test restart-safe analytics injection
+        run: sh tests/chilitrack-injection.test.sh
+
+      - name: Build static-site container
+        run: docker build --tag mlxgpt-site:ci .
+
+      - name: Smoke production container and analytics tag
+        run: |
+          container_id="$(docker run --detach --publish 127.0.0.1::80 \
+            --env NEXT_PUBLIC_CHILITRACK_WEBSITE_ID=11111111-2222-4333-8444-555555555555 \
+            mlxgpt-site:ci)"
+          trap 'docker rm --force "$container_id" >/dev/null 2>&1 || true' EXIT
+          host_port="$(docker port "$container_id" 80/tcp | sed -n 's/.*://p' | head -n 1)"
+          test -n "$host_port"
+          for _ in $(seq 1 20); do
+            if curl --fail --silent "http://127.0.0.1:${host_port}/" > /tmp/index.html; then
+              break
+            fi
+            sleep 1
+          done
+          grep -q 'id="chilitrack-analytics"' /tmp/index.html
+          grep -q 'data-website-id="11111111-2222-4333-8444-555555555555"' /tmp/index.html
+          grep -q 'data-domains="mlxgpt.com"' /tmp/index.html

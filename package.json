@@ -6,6 +6,7 @@
 	"scripts": {
 		"serve": "bunx serve site --listen 4173 --no-clipboard --single",
 		"lint": "biome check playwright.config.ts tsconfig.json package.json tests/e2e",
+		"test:analytics": "sh tests/chilitrack-injection.test.sh",
 		"typecheck": "tsc --noEmit",
 		"test:e2e": "playwright test",
 		"test:smoke": "playwright test"
