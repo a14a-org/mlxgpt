@@ -84,7 +84,7 @@ jobs:
           retention-days: 7
 
   analytics-container-smoke:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7
 
