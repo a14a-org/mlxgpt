@@ -37,7 +37,12 @@ jobs:
       - name: Install Python project + tooling
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[train]" ruff pytest
+          # ruff is pinned like every other tool in this repo (python, bun,
+          # biome, playwright). It was the one unpinned linter, and 0.16
+          # changed its default rule set, turning CI red on Python files no
+          # open PR had touched -- which then skipped every later step,
+          # including the site E2E tests. Bump this deliberately, not by drift.
+          python -m pip install -e ".[train]" ruff==0.15.22 pytest
 
       # Renovate (not Dependabot) updates package.json; regenerate the lockfile
       # on its PRs so --frozen-lockfile does not drift.
