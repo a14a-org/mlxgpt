@@ -115,3 +115,14 @@ jobs:
           grep -q 'id="chilitrack-analytics"' /tmp/index.html
           grep -q 'data-website-id="11111111-2222-4333-8444-555555555555"' /tmp/index.html
           grep -q 'data-domains="mlxgpt.com"' /tmp/index.html
+          # The startup rewrite is a line-oriented sed over data-website-id. It
+          # must not drop the rest of the tag, so assert the privacy-relevant
+          # attributes survive into what nginx actually serves.
+          grep -q 'data-exclude-search="true"' /tmp/index.html
+          grep -q 'data-exclude-hash="true"' /tmp/index.html
+          grep -q 'data-performance="true"' /tmp/index.html
+          # Neither stream is disclosed by a published privacy policy yet.
+          if grep -q 'data-replay\|data-heatmap' /tmp/index.html; then
+            echo "session replay / heatmap enabled without a published privacy policy" >&2
+            exit 1
+          fi

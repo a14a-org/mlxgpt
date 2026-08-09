@@ -967,7 +967,16 @@ footer {
 }
 </style>
 <script defer src="https://analytics.a14a.org/script.js" data-website-id="8f50186e-74cb-4d63-978d-bd4987e04b2b"></script>
-<script id="chilitrack-analytics" defer src="https://ingest.chilitrack.com/script.js" data-website-id="c432d2ba-2529-4a99-91e5-d07bd4bcbbbe" data-chili-mode="side-by-side" data-domains="mlxgpt.com"></script>
+<!-- ChiliTrack, running side by side with Umami above. In this mode ChiliTrack
+     installs itself on window.chili and leaves window.umami to the Umami tag,
+     so custom events must be sent through window.chili (see the footer script).
+     data-exclude-search / data-exclude-hash strip the query string and fragment
+     from every reported URL; without them the RUM and error streams ship full
+     URLs. This page navigates by fragment (#metrics, #log, ...), so the
+     fragment is dropped from analytics but in-page navigation is unaffected.
+     Keep this tag on a SINGLE line: docker/40-chilitrack-website-id.sh rewrites
+     data-website-id with a line-oriented sed at container start. -->
+<script id="chilitrack-analytics" defer src="https://ingest.chilitrack.com/script.js" data-website-id="c432d2ba-2529-4a99-91e5-d07bd4bcbbbe" data-chili-mode="side-by-side" data-domains="mlxgpt.com" data-exclude-search="true" data-exclude-hash="true" data-performance="true"></script>
 
 <!-- Error tracking via GlitchTip (Sentry-SDK compatible). Loaded from the
      pinned Sentry browser CDN bundle with Subresource Integrity. The DSN is a
@@ -1672,6 +1681,32 @@ document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 });
+
+// The one intent signal on this page: leaving for the GitHub repository. Sent
+// through window.chili and NOT window.umami -- the ChiliTrack tag runs in
+// data-chili-mode="side-by-side", where Umami keeps window.umami and ChiliTrack
+// takes window.chili. Targeting the wrong handle silently files the event with
+// the other product.
+//
+// One delegated listener in the capture phase rather than a handler per link,
+// so it still fires if something deeper stops propagation. The tracker may be
+// absent (blocked, still loading, sampled out), so the call is optional and
+// must never be the reason a link fails to open.
+document.addEventListener('click', function (event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const link = target.closest('a[href]');
+  if (!link) return;
+
+  const href = link.getAttribute('href') || '';
+  if (!href.includes('github.com/a14a-org/mlxgpt')) return;
+
+  // Which copy of the CTA was used -- the nav pill or the footer link.
+  const location = link.closest('nav') ? 'nav' : 'footer';
+  if (window.chili && typeof window.chili.track === 'function') {
+    window.chili.track('repo_click', { location: location, href: href });
+  }
+}, true);
 </script>
 
 </body>
