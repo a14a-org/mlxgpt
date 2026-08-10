@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+repo_root="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
+
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
@@ -61,3 +63,25 @@ if CHILITRACK_HTML_ROOT="$tmp_dir" \
   echo "duplicate ChiliTrack tags were accepted" >&2
   exit 1
 fi
+
+# The shipped tag must carry the URL-redaction attributes, and the startup
+# rewrite must not drop them. ChiliTrack redacts only when it is told to:
+# without these, location.href ships verbatim -- query string and fragment
+# included -- in the RUM payload and in error breadcrumbs.
+#
+# tests/e2e/url-redaction.spec.ts pins the same two attributes in Playwright,
+# but that spec runs in the `build` job behind `ruff check`, so a lint failure
+# on unrelated Python skips it. Asserting here as well keeps the pin executing
+# in the container job, which exercises the real site/index.html through the
+# production entrypoint.
+cp "$repo_root/site/index.html" "$tmp_dir/index.html"
+CHILITRACK_HTML_ROOT="$tmp_dir" \
+NEXT_PUBLIC_CHILITRACK_WEBSITE_ID="$override_id" \
+  sh docker/40-chilitrack-website-id.sh
+
+for attribute in 'data-exclude-search="true"' 'data-exclude-hash="true"'; do
+  if ! grep 'id="chilitrack-analytics"' "$tmp_dir/index.html" | grep -q -- "$attribute"; then
+    echo "ChiliTrack tag in site/index.html is missing $attribute" >&2
+    exit 1
+  fi
+done
