@@ -22,13 +22,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.head_ref || github.ref }}
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.14.7"
+          python-version: "3.15.1"
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: playwright-report
           path: playwright-report/
@@ -95,7 +95,7 @@ jobs:
     # Linux runner until a dedicated ephemeral public-repo runner exists.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Test restart-safe analytics injection
         run: sh tests/chilitrack-injection.test.sh
