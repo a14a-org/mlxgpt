@@ -20,6 +20,7 @@ jobs:
     # Mac Mini cluster. macos-latest is Apple Silicon, so the MLX training code
     # and its tests run for real here.
     runs-on: macos-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -30,7 +31,7 @@ jobs:
         with:
           python-version: "3.15.2"
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.4.4"
 
@@ -94,6 +95,7 @@ jobs:
     # on our infrastructure. Keep this Docker-only gate on an isolated hosted
     # Linux runner until a dedicated ephemeral public-repo runner exists.
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
